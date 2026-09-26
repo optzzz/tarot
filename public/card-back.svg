@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 346">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0.35" y2="1">
+    <stop offset="0" stop-color="#1a1f3d"/><stop offset="1" stop-color="#0d1024"/>
+  </linearGradient>
+  <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#3a3f78" stop-opacity=".55"/><stop offset="1" stop-color="#3a3f78" stop-opacity="0"/>
+  </radialGradient>
+  <pattern id="lat" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <path d="M0 0H12M0 0V12" stroke="#c9a96a" stroke-opacity=".085" stroke-width=".6" fill="none"/>
+  </pattern>
+</defs>
+<rect width="200" height="346" fill="url(#bg)"/>
+<rect x="10" y="10" width="180" height="326" rx="4" fill="url(#lat)"/>
+<circle cx="100" cy="173" r="92" fill="url(#glow)"/>
+<g fill="none" stroke="#c9a96a" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="10" y="10" width="180" height="326" rx="4" stroke-width="1" stroke-opacity=".8"/>
+  <rect x="15" y="15" width="170" height="316" rx="2.5" stroke-width=".45" stroke-opacity=".5"/>
+  
+  <circle cx="100" cy="173" r="44" stroke-width="0.9"/>
+  <circle cx="100" cy="173" r="39" stroke-width="0.45" stroke-opacity=".6"/>
+  <g stroke-width="0.7"><path d="M149 173L158 173M148.06 182.56L152.47 183.44M145.27 191.75L153.59 195.2M140.74 200.22L144.48 202.72M134.65 207.65L141.01 214.01M127.22 213.74L129.72 217.48M118.75 218.27L122.2 226.59M109.56 221.06L110.44 225.47M100 222L100 231M90.44 221.06L89.56 225.47M81.25 218.27L77.8 226.59M72.78 213.74L70.28 217.48M65.35 207.65L58.99 214.01M59.26 200.22L55.52 202.72M54.73 191.75L46.41 195.2M51.94 182.56L47.53 183.44M51 173L42 173M51.94 163.44L47.53 162.56M54.73 154.25L46.41 150.8M59.26 145.78L55.52 143.28M65.35 138.35L58.99 131.99M72.78 132.26L70.28 128.52M81.25 127.73L77.8 119.41M90.44 124.94L89.56 120.53M100 124L100 115M109.56 124.94L110.44 120.53M118.75 127.73L122.2 119.41M127.22 132.26L129.72 128.52M134.65 138.35L141.01 131.99M140.74 145.78L144.48 143.28M145.27 154.25L153.59 150.8M148.06 163.44L152.47 162.56"/></g>
+  <g stroke-width="0.8"><polygon points="100,140 104.78,161.45 123.33,149.67 111.55,168.22 133,173 111.55,177.78 123.33,196.33 104.78,184.55 100,206 95.22,184.55 76.67,196.33 88.45,177.78 67,173 88.45,168.22 76.67,149.67 95.22,161.45"/></g>
+  <g stroke-width="0.5" stroke-opacity=".7"><polygon points="100,151 103.44,164.69 115.56,157.44 108.31,169.56 122,173 108.31,176.44 115.56,188.56 103.44,181.31 100,195 96.56,181.31 84.44,188.56 91.69,176.44 78,173 91.69,169.56 84.44,157.44 96.56,164.69"/></g>
+  <circle cx="100" cy="173" r="4" fill="#c9a96a" fill-opacity=".85" stroke="none"/>
+  <g stroke-width=".7" stroke-opacity=".85">
+    <path d="M91 58 A9 9 0 0 0 109 58 A11.25 11.25 0 0 1 91 58Z" transform="translate(0 1.35)"/>
+    <path d="M91 288 A9 9 0 0 1 109 288 A11.25 11.25 0 0 0 91 288Z" transform="translate(0 -1.35)"/>
+  </g>
+  <g stroke-width=".5" stroke-opacity=".6">
+    <path d="M100 76v12M100 258v12"/>
+    <path d="M100 36l4 6-4 6-4-6zM100 298l4 6-4 6-4-6z"/>
+  </g>
+  <g stroke-width=".6" stroke-opacity=".55">
+    <path d="M15 33a18 18 0 0 0 18-18M185 33a18 18 0 0 1-18-18M15 313a18 18 0 0 1 18 18M185 313a18 18 0 0 0-18 18"/>
+  </g>
+</g>
+</svg>
