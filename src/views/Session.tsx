@@ -2,18 +2,16 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { CARD_BACK, CARD_IDS, CARD_RATIO } from '../data/cards';
 import { SPREADS, type SpreadId } from '../data/spreads';
 import { Board, LABEL_H } from '../components/Board';
-import { Fan, fanGeometry, type FanMode, type FlyFrom } from '../components/Fan';
+import { Fan, fanGeometry, type FanCard, type FanMode, type FlyFrom } from '../components/Fan';
 import { ReadingBody } from '../components/ReadingBody';
 import { useViewport } from '../lib/hooks';
 import { go } from '../lib/router';
 import { shuffleDeck, type DrawnCard } from '../lib/random';
 import { newId, saveReading, todayKey, type Reading } from '../lib/store';
 
-type Phase = 'ready' | 'shuffling' | 'spread' | 'collecting' | 'gather' | 'reveal';
+type Phase = 'ready' | 'shuffling' | 'spread' | 'gather' | 'reveal';
 
 const TOPBAR = 56;
-const HINT_H = 52;
-const MAX_CW: Record<SpreadId, number> = { single: 220, daily: 220, three: 190, celtic: 118 };
 
 interface Flyer { key: number; slot: number; from: FlyFrom }
 
@@ -23,7 +21,7 @@ export function Session({ spreadId, question }: { spreadId: SpreadId; question: 
   const vp = useViewport();
   const geo = useMemo(() => fanGeometry(vp.w, vp.h), [vp.w, vp.h]);
 
-  const [deck, setDeck] = useState<DrawnCard[]>(() => shuffleDeck(CARD_IDS));
+  const [deck, setDeck] = useState<FanCard[]>(() => shuffleDeck(CARD_IDS).map((c, i) => ({ ...c, uid: `u${i}` })));
   const [phase, setPhase] = useState<Phase>('ready');
   const [shuffleSignal, setShuffleSignal] = useState(0);
   const [drawn, setDrawn] = useState<(DrawnCard | null)[]>(() => Array(total).fill(null));
@@ -35,20 +33,17 @@ export function Session({ spreadId, question }: { spreadId: SpreadId; question: 
   const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
   const flyKey = useRef(0);
 
-  const pickedCount = drawn.filter(Boolean).length;
   const allLanded = landed.every(Boolean);
   const allFlipped = flipped.every(Boolean);
   const revealing = phase === 'gather' || phase === 'reveal';
 
-  // ---------- 布局 ----------
-  const phone = vp.w < 640;
-  const qH = question ? (phone ? 56 : 48) : 0;
+  // ---------- 布局：抽牌页只有牌阵和牌扇，牌阵占满剩下的高度 ----------
   const labelH = spread.labels === 'name' ? LABEL_H : 0;
   const availW = Math.min(vp.w - 32, 980);
-  const drawAreaH = Math.max(160, vp.h - TOPBAR - qH - HINT_H - geo.height - 8);
-  const revealAreaH = spreadId === 'celtic' ? vp.h - TOPBAR - qH - HINT_H - 16 : Math.min(vp.h * 0.58, 520);
+  const drawAreaH = Math.max(160, vp.h - TOPBAR - geo.height - 8);
+  const revealAreaH = spreadId === 'celtic' ? vp.h - TOPBAR - 24 : Math.min(vp.h * 0.62, 600);
   const areaH = revealing ? revealAreaH : drawAreaH;
-  const cw = Math.floor(Math.min(availW / spread.w, (areaH - labelH - 20) / spread.h, MAX_CW[spreadId]));
+  const cw = Math.floor(Math.min(availW / spread.w, (areaH - labelH - 28) / spread.h, spread.maxCw));
   const boardH = spread.h * cw + labelH;
 
   // ---------- 洗牌 ----------
@@ -58,20 +53,20 @@ export function Session({ spreadId, question }: { spreadId: SpreadId; question: 
     setShuffleSignal(s => s + 1);
   }
   function onShuffleEnd() {
-    setDeck(d => shuffleDeck(d.map(c => c.id)));
+    // 重新随机每张实体牌对应的牌，但保持 DOM 顺序不变，展开动画才连贯
+    setDeck(d => {
+      const fresh = shuffleDeck(d.map(c => c.id));
+      return d.map((c, i) => ({ ...fresh[i], uid: c.uid }));
+    });
     setPhase('spread');
-  }
-  function reshuffle() {
-    if (phase !== 'spread' || pickedCount > 0) return;
-    setPhase('collecting');
-    setTimeout(() => { setPhase('shuffling'); setShuffleSignal(s => s + 1); }, 650);
   }
 
   // ---------- 抽牌 ----------
   function onPick(index: number, from: FlyFrom) {
     const slot = drawn.findIndex(d => d === null);
     if (slot < 0) return;
-    const card = deck[index];
+    const { id, reversed } = deck[index];
+    const card: DrawnCard = { id, reversed };
     setDeck(d => d.filter((_, i) => i !== index));
     setDrawn(d => d.map((x, i) => (i === slot ? card : x)));
     setFlyers(f => [...f, { key: ++flyKey.current, slot, from }]);
@@ -121,23 +116,8 @@ export function Session({ spreadId, question }: { spreadId: SpreadId; question: 
   const fanMode: FanMode = phase === 'spread' ? 'spread' : phase === 'gather' ? 'gather' : 'stack';
   const nextSlot = phase === 'spread' ? drawn.findIndex(d => d === null) : -1;
 
-  let hint: React.ReactNode = null;
-  if (phase === 'ready') hint = <span>点击牌堆洗牌</span>;
-  else if (phase === 'shuffling' || phase === 'collecting') hint = <span className="muted">洗牌中…</span>;
-  else if (phase === 'spread' && nextSlot >= 0) {
-    hint = (
-      <>
-        {total > 1 && <span>第 {nextSlot + 1} / {total} 张 · {spread.positions[nextSlot].name}</span>}
-        <span className="muted">{phone ? '在牌上滑动挑选，松手抽牌' : '移动挑选，点击抽牌'}</span>
-        {pickedCount === 0 && <button className="text-btn" onClick={reshuffle}>重新洗牌</button>}
-      </>
-    );
-  } else if (phase === 'reveal' && !allFlipped) hint = <span>点击牌面翻开</span>;
-
   return (
     <div className={'session' + (revealing ? ' revealing' : '')}>
-      {question && <div className="session-q" style={{ height: qH }}><p>{question}</p></div>}
-
       <div className="board-area" style={{ height: revealing ? boardH + 24 : areaH }}>
         <Board
           spread={spread}
@@ -150,8 +130,6 @@ export function Session({ spreadId, question }: { spreadId: SpreadId; question: 
           onCardClick={phase === 'reveal' ? onCardClick : undefined}
         />
       </div>
-
-      <div className={'hint' + (hint ? '' : ' empty')} style={{ height: hint ? HINT_H : 0 }}>{hint}</div>
 
       {!fanGone && (
         <div className="fan-wrap" style={{ height: revealing ? 0 : geo.height }}>

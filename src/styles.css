@@ -284,6 +284,8 @@ main.session .session-q { padding: 4px 24px 8px; }
   color: var(--gold-3);
   transition: border-color 0.3s, background 0.3s;
 }
+/* 横放的第 2 张：序号放到它的右端，免得和第 1 张的序号叠在一起（牌位转了 90°，本地"上"就是屏幕右） */
+.slot.cross .slot-empty { place-items: start center; padding-top: 7%; box-sizing: border-box; }
 .slot.cross .slot-empty span { transform: rotate(-90deg); }
 .slot.next .slot-empty {
   border-color: rgba(207, 178, 123, 0.55);
@@ -327,27 +329,6 @@ main.session .session-q { padding: 4px 24px 8px; }
 .tc-front { transform: rotateY(180deg); background: #e8dfca; }
 .tc-face img { width: 100%; height: 100%; display: block; object-fit: cover; }
 img.rev { transform: rotate(180deg); }
-
-.hint {
-  flex: none;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: center;
-  align-items: center;
-  justify-content: center;
-  column-gap: 14px;
-  row-gap: 2px;
-  padding: 0 16px;
-  overflow: hidden;
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  color: var(--ink-2);
-  text-align: center;
-  transition: height 0.4s var(--ease), opacity 0.4s;
-}
-.hint.empty { opacity: 0; }
-.hint .muted { font-size: 13px; }
-.hint .text-btn { padding: 4px 6px; }
 
 .fan-wrap { flex: none; position: relative; transition: height 0.6s var(--ease); }
 .fan {

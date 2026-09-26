@@ -26,6 +26,8 @@ export interface Spread {
   positions: Position[];
   /** 给 AI 的篇幅要求 */
   length: string;
+  /** 牌阵里一张牌的最大宽度（px） */
+  maxCw: number;
 }
 
 const H = CARD_RATIO;
@@ -37,12 +39,12 @@ const staffX = 4.982, staffStep = H + 0.12;
 export const SPREADS: Record<SpreadId, Spread> = {
   single: {
     id: 'single', name: '单张', hint: '一张牌，直接的指引', labels: 'none',
-    w: 1, h: H, length: '300 字左右',
+    w: 1, h: H, length: '300 字左右', maxCw: 260,
     positions: [{ name: '指引', desc: '对这个问题最核心的提示', x: 0.5, y: H / 2 }],
   },
   three: {
     id: 'three', name: '三张', hint: '过去 · 现在 · 未来', labels: 'name',
-    w: 3.56, h: H, length: '600 字左右',
+    w: 3.56, h: H, length: '600 字左右', maxCw: 230,
     positions: [
       { name: '过去', desc: '这件事的来由，以及已经形成的影响', x: 0.5, y: H / 2 },
       { name: '现在', desc: '当前的状态与问题的核心', x: 1.78, y: H / 2 },
@@ -51,7 +53,7 @@ export const SPREADS: Record<SpreadId, Spread> = {
   },
   celtic: {
     id: 'celtic', name: '凯尔特十字', hint: '十张牌，适合复杂的问题', labels: 'number',
-    w: 5.482, h: 4 * H + 3 * 0.12, length: '1000 到 1200 字',
+    w: 5.482, h: 4 * H + 3 * 0.12, length: '1000 到 1200 字', maxCw: 140,
     positions: [
       { name: '现状', desc: '当前处境的核心', x: cx, y: cy },
       { name: '阻碍', desc: '横在面前的挑战（有时也是助力）', x: cx, y: cy, cross: true },
@@ -67,7 +69,7 @@ export const SPREADS: Record<SpreadId, Spread> = {
   },
   daily: {
     id: 'daily', name: '今日一牌', hint: '', labels: 'none',
-    w: 1, h: H, length: '150 到 250 字',
+    w: 1, h: H, length: '150 到 250 字', maxCw: 260,
     positions: [{ name: '今日', desc: '今天需要留意的能量与提示', x: 0.5, y: H / 2 }],
   },
 };

@@ -8,8 +8,6 @@ import { deleteReading, useHistory } from '../lib/store';
 import { useUI } from '../ui';
 import { formatTime } from './HistoryPage';
 
-const MAX_CW = { single: 220, daily: 220, three: 190, celtic: 118 } as const;
-
 export function ReadingPage({ id }: { id: string }) {
   const list = useHistory();
   const reading = useMemo(() => list.find(r => r.id === id), [list, id]);
@@ -24,8 +22,8 @@ export function ReadingPage({ id }: { id: string }) {
   const spread = SPREADS[reading.spread];
   const labelH = spread.labels === 'name' ? LABEL_H : 0;
   const availW = Math.min(vp.w - 32, 980);
-  const availH = reading.spread === 'celtic' ? vp.h - 56 - 120 : Math.min(vp.h * 0.58, 520);
-  const cw = Math.floor(Math.min(availW / spread.w, (availH - labelH - 20) / spread.h, MAX_CW[reading.spread]));
+  const availH = reading.spread === 'celtic' ? vp.h - 56 - 120 : Math.min(vp.h * 0.62, 600);
+  const cw = Math.floor(Math.min(availW / spread.w, (availH - labelH - 20) / spread.h, spread.maxCw));
   const all = reading.cards.map(() => true);
 
   function remove() {
