@@ -22,7 +22,8 @@ export function ReadingPage({ id }: { id: string }) {
   const spread = SPREADS[reading.spread];
   const labelH = spread.labels === 'name' ? LABEL_H : 0;
   const availW = Math.min(vp.w - 32, 980);
-  const availH = reading.spread === 'celtic' ? vp.h - 56 - 120 : Math.min(vp.h * 0.62, 600);
+  const usableH = vp.h - vp.sat - vp.sab;
+  const availH = reading.spread === 'celtic' ? usableH - 56 - 120 : Math.min(usableH * 0.62, 600);
   const cw = Math.floor(Math.min(availW / spread.w, (availH - labelH - 20) / spread.h, spread.maxCw));
   const all = reading.cards.map(() => true);
 

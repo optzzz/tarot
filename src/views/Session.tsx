@@ -19,7 +19,7 @@ export function Session({ spreadId, question }: { spreadId: SpreadId; question: 
   const spread = SPREADS[spreadId];
   const total = spread.positions.length;
   const vp = useViewport();
-  const geo = useMemo(() => fanGeometry(vp.w, vp.h), [vp.w, vp.h]);
+  const geo = useMemo(() => fanGeometry(vp.w, vp.h - vp.sat - vp.sab), [vp.w, vp.h, vp.sat, vp.sab]);
 
   const [deck, setDeck] = useState<FanCard[]>(() => shuffleDeck(CARD_IDS).map((c, i) => ({ ...c, uid: `u${i}` })));
   const [phase, setPhase] = useState<Phase>('ready');
@@ -40,8 +40,10 @@ export function Session({ spreadId, question }: { spreadId: SpreadId; question: 
   // ---------- 布局：抽牌页只有牌阵和牌扇，牌阵占满剩下的高度 ----------
   const labelH = spread.labels === 'name' ? LABEL_H : 0;
   const availW = Math.min(vp.w - 32, 980);
-  const drawAreaH = Math.max(160, vp.h - TOPBAR - geo.height - 8);
-  const revealAreaH = spreadId === 'celtic' ? vp.h - TOPBAR - 24 : Math.min(vp.h * 0.62, 600);
+  // vp.h 是整个窗口高度；在安卓 App 里它包含状态栏和底部导航条，要扣掉
+  const usableH = vp.h - vp.sat - vp.sab;
+  const drawAreaH = Math.max(160, usableH - TOPBAR - geo.height - 8);
+  const revealAreaH = spreadId === 'celtic' ? usableH - TOPBAR - 24 : Math.min(usableH * 0.62, 600);
   const areaH = revealing ? revealAreaH : drawAreaH;
   const cw = Math.floor(Math.min(availW / spread.w, (areaH - labelH - 28) / spread.h, spread.maxCw));
   const boardH = spread.h * cw + labelH;

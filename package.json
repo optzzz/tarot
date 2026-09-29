@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "cards": "node scripts/fetch-cards.mjs",
-    "art": "node scripts/make-art.mjs"
+    "art": "node scripts/make-art.mjs",
+    "android:setup": "node scripts/setup-android.mjs",
+    "android": "node scripts/build-apk.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",

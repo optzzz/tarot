@@ -2,41 +2,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import { GOLD, emblem, f } from './emblem.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const GOLD = '#c9a96a';
-const f = n => +n.toFixed(2);
-
-function star(cx, cy, outer, inner, points = 8) {
-  const pts = [];
-  for (let i = 0; i < points * 2; i++) {
-    const r = i % 2 ? inner : outer;
-    const a = (Math.PI / points) * i - Math.PI / 2;
-    pts.push(`${f(cx + r * Math.cos(a))},${f(cy + r * Math.sin(a))}`);
-  }
-  return `<polygon points="${pts.join(' ')}"/>`;
-}
-
-function rays(cx, cy, r0, count, long, short) {
-  let d = '';
-  for (let i = 0; i < count; i++) {
-    const a = (2 * Math.PI / count) * i;
-    const len = i % 2 ? short : long;
-    d += `M${f(cx + r0 * Math.cos(a))} ${f(cy + r0 * Math.sin(a))}L${f(cx + (r0 + len) * Math.cos(a))} ${f(cy + (r0 + len) * Math.sin(a))}`;
-  }
-  return `<path d="${d}"/>`;
-}
-
-/** 中心图案，s 为缩放 */
-function emblem(cx, cy, s, sw = 1) {
-  return `
-  <circle cx="${cx}" cy="${cy}" r="${f(44 * s)}" stroke-width="${f(0.9 * sw)}"/>
-  <circle cx="${cx}" cy="${cy}" r="${f(39 * s)}" stroke-width="${f(0.45 * sw)}" stroke-opacity=".6"/>
-  <g stroke-width="${f(0.7 * sw)}">${rays(cx, cy, 49 * s, 32, 9 * s, 4.5 * s)}</g>
-  <g stroke-width="${f(0.8 * sw)}">${star(cx, cy, 33 * s, 12.5 * s)}</g>
-  <g stroke-width="${f(0.5 * sw)}" stroke-opacity=".7">${star(cx, cy, 22 * s, 9 * s)}</g>
-  <circle cx="${cx}" cy="${cy}" r="${f(4 * s)}" fill="${GOLD}" fill-opacity=".85" stroke="none"/>`;
-}
 
 function crescent(cx, cy, r, flip) {
   // 两段圆弧围成的月牙

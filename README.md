@@ -44,4 +44,15 @@ Kimi 预检未返回跨域许可；OpenAI 官方接口在本机网络下连不�
 - **让背景延伸到状态栏下面**：目前所有浏览器安装的网页应用都做不到。Chrome 在 2026-07 开始为已安装应用
   接入 short-edges cutout 模式，尚未发布正式版；Edge 通常更晚跟进。
 - **可行的路**：①有 Google 服务的手机改用 Chrome 安装，可去掉角标、状态栏跟随 theme_color（但背景仍不延伸）；
-  ②做一个安卓 WebView 外壳 APK，可以真正全屏沉浸、背景延伸到状态栏下、没有角标。
+  ②做一个安卓 WebView 外壳 APK，可以真正全屏沉浸、背景延伸到状态栏下、没有角标（已采用，见下）。
+
+## 安卓 App（WebView 外壳）
+
+- 源码在 `android/`：一个全屏 WebView 打开 https://optzzz.github.io/tarot/ ，网站更新后 App 自动同步。
+- 内容铺到状态栏和导航条下面；两者的高度通过地址参数 `?sat=&sab=` 和 `window.__setSafeArea()` 传给网页，
+  网页用 CSS 变量 `--sat` / `--sab` 留出间距（浏览器里这两个变量取 `env(safe-area-inset-*)`）。
+- 打包：`npm run android:setup`（下载 JDK 与安卓构建工具到 `vendor/`，约 600 MB）→ `npm run android`
+  → `android/build/tarot-<版本>.apk`。不用 Gradle，直接调用 aapt2 / javac / d8 / zipalign / apksigner。
+- 更新 App 本身时把 `android/version.json` 的 `code` 加 1 再打包。
+- **签名文件 `android/release.keystore` 和 `android/keystore.properties` 只在本机、不进 git，务必备份。**
+  丢了以后新打的包无法覆盖安装，只能卸载重装（App 里的记录会丢）。
