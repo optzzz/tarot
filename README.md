@@ -54,5 +54,11 @@ Kimi 预检未返回跨域许可；OpenAI 官方接口在本机网络下连不�
 - 打包：`npm run android:setup`（下载 JDK 与安卓构建工具到 `vendor/`，约 600 MB）→ `npm run android`
   → `android/build/tarot-<版本>.apk`。不用 Gradle，直接调用 aapt2 / javac / d8 / zipalign / apksigner。
 - 更新 App 本身时把 `android/version.json` 的 `code` 加 1 再打包。
+- 1.0 在真机上一点开就闪退：`onCreate` 里在 `setContentView` 之前调用了 `Window.getInsetsController()`，
+  而 `PhoneWindow.getInsetsController()` 直接 `return mDecor.getWindowInsetsController()`、不判空；
+  之前调用的 setStatusBarColor / setAttributes 等都只在 `mDecor != null` 时才碰它，不会创建它
+  （已对照 AOSP android11 / 14 / 16 / main 的 PhoneWindow.java 核实）。1.1 先调 `getDecorView()` 修复。
+- 1.1 起加了崩溃记录：闪退后下一次打开会显示崩溃原因（含机型、系统、WebView 版本），方便截图排查。
+  电脑上没有可用的安卓模拟器（需要开启 Windows"虚拟机监控程序平台"并重启），真机效果要靠手机验证。
 - **签名文件 `android/release.keystore` 和 `android/keystore.properties` 只在本机、不进 git，务必备份。**
   丢了以后新打的包无法覆盖安装，只能卸载重装（App 里的记录会丢）。
