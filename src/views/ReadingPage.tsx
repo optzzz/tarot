@@ -59,6 +59,8 @@ export function ReadingPage({ id }: { id: string }) {
         cards={reading.cards}
         flipped={all}
         reading={reading}
+        // 刚占完、去设置里填好 Key 再回来时，自动开始解读；翻看较早的记录则等用户点"生成解读"
+        live={Date.now() - reading.time < 30 * 60 * 1000}
         footer={
           <div className="reading-foot">
             <button className={'text-btn danger' + (confirming ? ' confirm' : '')} onClick={remove}>

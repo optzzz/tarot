@@ -10,14 +10,14 @@ export interface Preset {
   model: string;
 }
 
-// 这些服务都实测过允许网页直接调用（CORS）
+// 这些服务都实测过允许网页直接调用（CORS）。模型默认留空：填好 Key 后由用户输入或从列表里选
 export const PRESETS: Preset[] = [
-  { id: 'deepseek', name: 'DeepSeek', kind: 'openai', baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat' },
-  { id: 'qwen', name: '通义千问', kind: 'openai', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus' },
-  { id: 'zhipu', name: '智谱', kind: 'openai', baseUrl: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' },
-  { id: 'siliconflow', name: '硅基流动', kind: 'openai', baseUrl: 'https://api.siliconflow.cn/v1', model: 'deepseek-ai/DeepSeek-V3' },
+  { id: 'deepseek', name: 'DeepSeek', kind: 'openai', baseUrl: 'https://api.deepseek.com', model: '' },
+  { id: 'qwen', name: '通义千问', kind: 'openai', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: '' },
+  { id: 'zhipu', name: '智谱', kind: 'openai', baseUrl: 'https://open.bigmodel.cn/api/paas/v4', model: '' },
+  { id: 'siliconflow', name: '硅基流动', kind: 'openai', baseUrl: 'https://api.siliconflow.cn/v1', model: '' },
   { id: 'openrouter', name: 'OpenRouter', kind: 'openai', baseUrl: 'https://openrouter.ai/api/v1', model: '' },
-  { id: 'claude', name: 'Claude', kind: 'anthropic', baseUrl: 'https://api.anthropic.com', model: 'claude-opus-5' },
+  { id: 'claude', name: 'Claude', kind: 'anthropic', baseUrl: 'https://api.anthropic.com', model: '' },
   { id: 'custom', name: '其他（OpenAI 兼容接口）', kind: 'openai', baseUrl: '', model: '' },
 ];
 

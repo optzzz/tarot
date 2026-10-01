@@ -9,7 +9,10 @@ import { go } from '../lib/router';
 import { shuffleDeck, type DrawnCard } from '../lib/random';
 import { newId, saveReading, todayKey, type Reading } from '../lib/store';
 
-type Phase = 'ready' | 'shuffling' | 'spread' | 'gather' | 'reveal';
+type Phase = 'ready' | 'shuffling' | 'spread' | 'gather' | 'fade' | 'reveal';
+
+/** 翻牌 0.85 秒，第 0.16 秒转过中线；正面露出一半以上时再让牌义文字入场 */
+const TEXT_DELAY = 280;
 
 const TOPBAR = 56;
 
@@ -27,6 +30,7 @@ export function Session({ spreadId, question }: { spreadId: SpreadId; question: 
   const [drawn, setDrawn] = useState<(DrawnCard | null)[]>(() => Array(total).fill(null));
   const [landed, setLanded] = useState<boolean[]>(() => Array(total).fill(false));
   const [flipped, setFlipped] = useState<boolean[]>(() => Array(total).fill(false));
+  const [textShown, setTextShown] = useState<boolean[]>(() => Array(total).fill(false));
   const [flyers, setFlyers] = useState<Flyer[]>([]);
   const [fanGone, setFanGone] = useState(false);
   const [reading, setReading] = useState<Reading | null>(null);
@@ -35,7 +39,8 @@ export function Session({ spreadId, question }: { spreadId: SpreadId; question: 
 
   const allLanded = landed.every(Boolean);
   const allFlipped = flipped.every(Boolean);
-  const revealing = phase === 'gather' || phase === 'reveal';
+  // 牌阵放大、上移只在牌扇完全收起淡出之后开始，两件事不重叠
+  const revealing = phase === 'reveal';
 
   // ---------- 布局：抽牌页只有牌阵和牌扇，牌阵占满剩下的高度 ----------
   const labelH = spread.labels === 'name' ? LABEL_H : 0;
@@ -78,16 +83,21 @@ export function Session({ spreadId, question }: { spreadId: SpreadId; question: 
     setFlyers(list => list.filter(x => x.key !== f.key));
   }
 
-  // 全部落位后：牌扇收起，牌阵放大，进入翻牌
+  // 全部落位后：牌扇收成一叠 → 停一下 → 淡出 → 牌阵平滑放大上移，进入翻牌
   useEffect(() => {
     if (!allLanded || phase !== 'spread') return;
-    const t1 = setTimeout(() => setPhase('gather'), 250);
-    return () => clearTimeout(t1);
+    const t = setTimeout(() => setPhase('gather'), 250);
+    return () => clearTimeout(t);
   }, [allLanded, phase]);
   useEffect(() => {
-    if (phase !== 'gather') return;
-    const t = setTimeout(() => { setFanGone(true); setPhase('reveal'); }, 650);
-    return () => clearTimeout(t);
+    if (phase === 'gather') {
+      const t = setTimeout(() => setPhase('fade'), 590 + 160); // 收拢 0.5 秒（两端先动 90ms）+ 停顿
+      return () => clearTimeout(t);
+    }
+    if (phase === 'fade') {
+      const t = setTimeout(() => { setFanGone(true); setPhase('reveal'); }, 340);
+      return () => clearTimeout(t);
+    }
   }, [phase]);
 
   // ---------- 翻牌 ----------
@@ -96,6 +106,8 @@ export function Session({ spreadId, question }: { spreadId: SpreadId; question: 
     if (spread.positions[i].cross && i > 0 && !flipped[i - 1]) i = i - 1;
     if (phase !== 'reveal' || flipped[i]) return;
     setFlipped(f => f.map((x, j) => (j === i ? true : x)));
+    const k = i;
+    setTimeout(() => setTextShown(t => t.map((x, j) => (j === k ? true : x))), TEXT_DELAY);
   }
 
   // 全部翻开：保存这次占卜，地址换成记录页（刷新后仍能看到）
@@ -115,7 +127,7 @@ export function Session({ spreadId, question }: { spreadId: SpreadId; question: 
     history.replaceState(history.state, '', `#/r/${r.id}`);
   }, [allFlipped, reading, question, spreadId, drawn]);
 
-  const fanMode: FanMode = phase === 'spread' ? 'spread' : phase === 'gather' ? 'gather' : 'stack';
+  const fanMode: FanMode = phase === 'spread' || phase === 'gather' || phase === 'fade' ? phase : 'stack';
   const nextSlot = phase === 'spread' ? drawn.findIndex(d => d === null) : -1;
 
   return (
@@ -152,7 +164,7 @@ export function Session({ spreadId, question }: { spreadId: SpreadId; question: 
         <ReadingBody
           spreadId={spreadId}
           cards={drawn as DrawnCard[]}
-          flipped={flipped}
+          flipped={textShown}
           reading={reading}
           live
           footer={

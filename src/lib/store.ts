@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type { DrawnCard } from './random';
 import type { SpreadId } from '../data/spreads';
+import type { HubTab } from './router';
 
 // ---------- localStorage 读写（隐私模式等情况下可能抛错，一律兜底） ----------
 
@@ -122,4 +123,7 @@ export const setAiSettings = settings.set;
 export const prefs = {
   get lastSpread(): SpreadId { return read<SpreadId>('tarot.lastSpread', 'three'); },
   set lastSpread(v: SpreadId) { write('tarot.lastSpread', v); },
+  /** 右上角入口上次停留的那一页 */
+  get lastTab(): HubTab { return read<HubTab>('tarot.lastTab', 'history'); },
+  set lastTab(v: HubTab) { write('tarot.lastTab', v); },
 };

@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { CloudBackground } from './components/CloudBackground';
 import { TopBar } from './components/TopBar';
 import { CardDetail } from './components/CardDetail';
-import { SettingsDialog } from './components/SettingsDialog';
 import { Home, PENDING_KEY } from './views/Home';
 import { Session } from './views/Session';
 import { ReadingPage } from './views/ReadingPage';
 import { HistoryPage } from './views/HistoryPage';
 import { DeckPage } from './views/DeckPage';
+import { SettingsPage } from './views/SettingsPage';
 import { go, useRoute } from './lib/router';
 import { findDaily, prefs } from './lib/store';
 import type { SpreadId } from './data/spreads';
@@ -31,9 +31,11 @@ function DailyGate() {
 
 export function App() {
   const route = useRoute();
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [card, setCard] = useState<CardTarget | null>(null);
-  const ui = useMemo(() => ({ openSettings: () => setSettingsOpen(true), openCard: setCard }), []);
+  const ui = useMemo(() => ({
+    openSettings: () => { prefs.lastTab = 'settings'; go('settings'); },
+    openCard: setCard,
+  }), []);
 
   useEffect(() => { window.scrollTo(0, 0); }, [route]);
 
@@ -48,6 +50,7 @@ export function App() {
     case 'reading': view = <ReadingPage id={route.id} />; break;
     case 'history': view = <HistoryPage />; break;
     case 'deck': view = <DeckPage />; break;
+    case 'settings': view = <SettingsPage />; break;
     default: view = <Home />;
   }
 
@@ -57,7 +60,6 @@ export function App() {
       <TopBar route={route} />
       <div className="view" key={route.name + ('id' in route ? route.id : '')}>{view}</div>
       <CardDetail target={card} onClose={() => setCard(null)} />
-      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </UIContext.Provider>
   );
 }

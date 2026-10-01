@@ -7,18 +7,6 @@ const base = {
 
 type P = SVGProps<SVGSVGElement>;
 
-export const IconHistory = (p: P) => (
-  <svg {...base} {...p}><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1" /><path d="M3.5 4.5v3.9h3.9" /><path d="M12 7.5V12l3 2" /></svg>
-);
-
-export const IconDeck = (p: P) => (
-  <svg {...base} {...p}><rect x="8.5" y="3.5" width="10" height="15" rx="1.6" /><path d="M5.6 6.2 4.4 6.6a1.4 1.4 0 0 0-.9 1.8l3.6 11a1.4 1.4 0 0 0 1.8.9l4.4-1.4" /></svg>
-);
-
-export const IconSettings = (p: P) => (
-  <svg {...base} {...p}><path d="M4 7h9M17 7h3M4 17h3M11 17h9" /><circle cx="15" cy="7" r="2" /><circle cx="9" cy="17" r="2" /></svg>
-);
-
 export const IconBack = (p: P) => (
   <svg {...base} {...p}><path d="M14.5 5.5 8 12l6.5 6.5" /></svg>
 );
@@ -38,8 +26,27 @@ export const IconEye = ({ off, ...p }: P & { off?: boolean }) => (
   </svg>
 );
 
-export const IconChevron = ({ dir = 'right', ...p }: P & { dir?: 'left' | 'right' }) => (
-  <svg {...base} {...p}><path d={dir === 'right' ? 'M9.5 5.5 16 12l-6.5 6.5' : 'M14.5 5.5 8 12l6.5 6.5'} /></svg>
+const CHEVRON = { right: 'M9.5 5.5 16 12l-6.5 6.5', left: 'M14.5 5.5 8 12l6.5 6.5', down: 'M6.5 9.5 12 15l5.5-5.5' };
+export const IconChevron = ({ dir = 'right', ...p }: P & { dir?: keyof typeof CHEVRON }) => (
+  <svg {...base} {...p}><path d={CHEVRON[dir]} /></svg>
+);
+
+/** 主入口：三张扇开的塔罗牌，前面一张带四芒星；后两张被前一张挡住的部分用遮罩去掉 */
+export const IconCards = (p: P) => (
+  <svg {...base} strokeWidth={1.35} {...p}>
+    <defs>
+      <mask id="cards-front">
+        <rect width="24" height="24" fill="#fff" />
+        <rect x="7.6" y="1.5" width="8.8" height="15.2" rx="1.9" fill="#000" />
+      </mask>
+    </defs>
+    <g mask="url(#cards-front)">
+      <rect x="8.25" y="4" width="7.5" height="12" rx="1.4" transform="rotate(-20 12 20.5)" />
+      <rect x="8.25" y="4" width="7.5" height="12" rx="1.4" transform="rotate(20 12 20.5)" />
+    </g>
+    <rect x="8.25" y="4" width="7.5" height="12" rx="1.4" />
+    <path d="M12 7.6c.22 1.5.78 2.06 2.3 2.3-1.52.24-2.08.8-2.3 2.3-.22-1.5-.78-2.06-2.3-2.3 1.52-.24 2.08-.8 2.3-2.3Z" strokeWidth={1} />
+  </svg>
 );
 
 /** 四芒星，用在"追问"和"今日一牌"入口 */

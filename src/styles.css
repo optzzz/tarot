@@ -13,6 +13,8 @@
   --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     'Noto Sans SC', sans-serif;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* 牌阵整体移动、放大用的缓动：起止都柔和，不会像瞬移 */
+  --glide: 0.7s cubic-bezier(0.45, 0, 0.2, 1);
   /* 状态栏与底部导航条的高度：浏览器里取 env()，安卓 App 外壳会直接写入实际值 */
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
@@ -100,6 +102,11 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
 }
 .icon-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--ink); }
 .icon-btn.active { color: var(--gold); }
+.hub-tabs { margin-right: 2px; }
+.hub-tabs button { padding: 8px 12px 12px; }
+.hub-btn svg { transition: transform 0.35s var(--ease); }
+.hub-btn:hover { color: var(--gold); }
+.hub-btn:hover svg { transform: rotate(-6deg) translateY(-1px); }
 
 /* ---------- 按钮 ---------- */
 
@@ -172,9 +179,9 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
 .question:focus { border-color: var(--gold-3); background: rgba(255, 255, 255, 0.045); }
 .question:focus-visible { outline: none; }
 
-.spread-pick, .chips { display: flex; gap: 4px; }
+.spread-pick, .chips, .hub-tabs { display: flex; gap: 4px; }
 .spread-pick { margin-top: 28px; }
-.spread-pick button, .chips button {
+.spread-pick button, .chips button, .hub-tabs button {
   position: relative;
   font-size: 14.5px;
   letter-spacing: 0.08em;
@@ -186,8 +193,8 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
   white-space: nowrap;
   transition: color 0.2s;
 }
-.spread-pick button:hover, .chips button:hover { color: var(--ink-2); }
-.spread-pick button::after, .chips button::after {
+.spread-pick button:hover, .chips button:hover, .hub-tabs button:hover { color: var(--ink-2); }
+.spread-pick button::after, .chips button::after, .hub-tabs button::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -201,8 +208,8 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
   transform: scale(0.3);
   transition: opacity 0.25s, transform 0.25s var(--ease);
 }
-.spread-pick button.on, .chips button.on { color: var(--ink); }
-.spread-pick button.on::after, .chips button.on::after { opacity: 1; transform: none; }
+.spread-pick button.on, .chips button.on, .hub-tabs button.on { color: var(--ink); }
+.spread-pick button.on::after, .chips button.on::after, .hub-tabs button.on::after { opacity: 1; transform: none; }
 .spread-hint {
   margin-top: 4px;
   min-height: 18px;
@@ -268,12 +275,12 @@ main.session .session-q { padding: 4px 24px 8px; }
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: height 0.6s var(--ease);
+  transition: height var(--glide);
 }
-.board { position: relative; flex: none; transition: width 0.6s var(--ease), height 0.6s var(--ease); }
+.board { position: relative; flex: none; transition: width var(--glide), height var(--glide); }
 .slot {
   position: absolute;
-  transition: left 0.6s var(--ease), top 0.6s var(--ease), width 0.6s var(--ease), height 0.6s var(--ease);
+  transition: left var(--glide), top var(--glide), width var(--glide), height var(--glide);
 }
 .slot.cross { transform: rotate(90deg); z-index: 2; }
 .slot-empty {
@@ -310,7 +317,7 @@ main.session .session-q { padding: 4px 24px 8px; }
 }
 
 /* 可翻转的牌 */
-.tc { position: relative; perspective: 1200px; transition: width 0.6s var(--ease), height 0.6s var(--ease), transform 0.25s var(--ease); }
+.tc { position: relative; perspective: 1200px; transition: width var(--glide), height var(--glide), transform 0.25s var(--ease); }
 .tc.clickable { cursor: pointer; }
 .tc.clickable:hover { transform: translateY(-3px); }
 .tc-inner {
@@ -353,9 +360,14 @@ img.rev { transform: rotate(180deg); }
   will-change: transform;
 }
 .fc img { width: 100%; height: 100%; display: block; }
-.fan.mode-gather .fc { opacity: 0; }
+.fan.mode-fade .fc { opacity: 0; }
 /* 牌堆里 78 张的阴影会叠成一圈黑晕，只保留最上面一张的阴影 */
-.fan.mode-stack .fc:not(:last-child) { box-shadow: none; }
+.fan.mode-stack .fc:not(:last-child),
+.fan.mode-gather .fc:not(:last-child),
+.fan.mode-fade .fc:not(:last-child) { box-shadow: none; }
+/* 洗牌时真实牌堆藏起来，由演员牌表演；演员牌阴影要轻，叠在一起才不会发黑 */
+.fan.shuffling .fc:not(.actor) { visibility: hidden; }
+.fc.actor { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.32); will-change: transform; }
 
 .flyer {
   position: fixed;
@@ -630,24 +642,8 @@ img.rev { transform: rotate(180deg); }
 .detail-nav.prev { left: 14px; }
 .detail-nav.next { right: 14px; }
 
-.settings { display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
-.dialog {
-  width: min(440px, 100%);
-  max-height: calc(100dvh - 32px - var(--sat) - var(--sab));
-  box-sizing: border-box;
-  overflow: auto;
-  padding: 18px 22px 20px;
-  background: rgba(18, 21, 38, 0.96);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
-  transform: translateY(10px) scale(0.985);
-  transition: transform 0.35s var(--ease);
-  scrollbar-width: none;
-}
-.overlay.open .dialog { transform: none; }
-.dialog-head { display: flex; align-items: center; justify-content: space-between; margin: 0 -8px 4px 0; }
-.dialog-head h2 { margin: 0; font-size: 16px; font-weight: 500; letter-spacing: 0.12em; }
+.settings-page { width: min(480px, 100%); }
+.settings-form { padding-top: 4px; }
 .field { display: block; margin-top: 14px; }
 .field > span { display: block; margin-bottom: 6px; font-size: 12.5px; letter-spacing: 0.06em; color: var(--ink-3); }
 .field input, .select select {
@@ -690,6 +686,46 @@ img.rev { transform: rotate(180deg); }
 .test-msg.ok { color: #a3c99d; }
 .test-msg.fail { color: #e0a093; }
 .note { margin: 16px 0 0; font-size: 12px; line-height: 1.6; color: var(--ink-3); }
+
+/* 模型选择：输入框 + 右侧展开完整列表 */
+.combo { position: relative; }
+.combo input { padding-right: 46px; }
+.combo-toggle { position: absolute; right: 2px; top: 2px; }
+.combo-toggle svg { transition: transform 0.25s var(--ease); }
+.combo-toggle.open svg { transform: rotate(180deg); }
+.combo-toggle:disabled { opacity: 0.35; cursor: default; }
+.combo-toggle:disabled:hover { background: none; color: var(--ink-2); }
+.combo-list {
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  max-height: 264px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  box-sizing: border-box;
+  background: rgba(20, 23, 42, 0.98);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(235, 230, 218, 0.18) transparent;
+  animation: fade-in 0.18s ease both;
+}
+.combo-list li {
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink-2);
+  cursor: pointer;
+  word-break: break-all;
+  transition: background 0.15s, color 0.15s;
+}
+.combo-list li:hover { background: rgba(255, 255, 255, 0.05); color: var(--ink); }
+.combo-list li.on { color: var(--gold); }
 
 /* ---------- 记录与图鉴 ---------- */
 

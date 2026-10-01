@@ -1,12 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { listModels, testConnection } from '../lib/ai';
 import { PRESETS, activeConfig, presetOf } from '../lib/ai/providers';
 import { getAiSettings, setAiSettings, useAiSettings, type ProviderConfig } from '../lib/store';
-import { useBackClose } from '../lib/hooks';
-import { IconClose, IconEye } from './Icons';
+import { IconChevron, IconEye } from '../components/Icons';
 
-export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const close = useBackClose(open, onClose);
+export function SettingsPage() {
   const s = useAiSettings();
   const preset = presetOf(s.provider);
   const cfg = activeConfig(s);
@@ -29,23 +27,16 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
     setTest({ state: 'idle' });
   }
 
-  // 填好地址和 Key 后，悄悄拉一次模型列表，供"模型"输入框联想
+  // 填好地址和 Key 后拉一次模型列表，供"模型"右侧展开选择
   useEffect(() => {
-    if (!open || !cfg.baseUrl || !cfg.apiKey) { setModels([]); return; }
+    if (!cfg.baseUrl || !cfg.apiKey) { setModels([]); return; }
     const ctrl = new AbortController();
     const t = setTimeout(() => {
       listModels(cfg, ctrl.signal).then(setModels).catch(() => setModels([]));
     }, 600);
     return () => { clearTimeout(t); ctrl.abort(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, s.provider, cfg.baseUrl, cfg.apiKey]);
-
-  useEffect(() => {
-    if (!open) return;
-    const on = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
-    addEventListener('keydown', on);
-    return () => removeEventListener('keydown', on);
-  });
+  }, [s.provider, cfg.baseUrl, cfg.apiKey]);
 
   async function runTest() {
     const seq = ++testSeq.current;
@@ -61,13 +52,8 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
   const canTest = !!(cfg.baseUrl && cfg.apiKey && cfg.model);
 
   return (
-    <div className={'overlay settings' + (open ? ' open' : '')} onClick={e => { if (e.target === e.currentTarget) close(); }}>
-      <div className="dialog" role="dialog" aria-modal="true" aria-label="AI 设置">
-        <div className="dialog-head">
-          <h2>AI 设置</h2>
-          <button className="icon-btn" onClick={close} aria-label="关闭"><IconClose /></button>
-        </div>
-
+    <main className="page settings-page">
+      <div className="settings-form">
         <label className="field">
           <span>服务</span>
           <div className="select">
@@ -103,17 +89,10 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
           </div>
         </label>
 
-        <label className="field">
+        <div className="field">
           <span>模型</span>
-          <input
-            value={cfg.model}
-            list="model-list"
-            placeholder={models.length ? '从列表选择或直接输入' : '例如 deepseek-chat'}
-            onChange={e => update({ model: e.target.value })}
-            spellCheck={false} autoComplete="off"
-          />
-          <datalist id="model-list">{models.map(m => <option key={m} value={m} />)}</datalist>
-        </label>
+          <ModelPicker value={cfg.model} models={models} onChange={m => update({ model: m })} />
+        </div>
 
         <div className="dialog-foot">
           <button className="btn" onClick={runTest} disabled={!canTest || test.state === 'running'}>
@@ -121,8 +100,77 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
           </button>
           {test.msg && <span className={'test-msg ' + test.state}>{test.msg}</span>}
         </div>
-        <p className="note">Key 只保存在这台设备的浏览器里，每台设备需要各填一次。</p>
+        <p className="note">Key 只保存在这台设备上，每台设备需要各填一次。</p>
       </div>
+    </main>
+  );
+}
+
+/**
+ * 模型输入框：可以直接输入；右侧按钮展开完整列表（不按当前内容过滤），
+ * 输入时才按输入内容筛选。列表很长时（OpenRouter 有几百个）在框内滚动。
+ */
+function ModelPicker({ value, models, onChange }: { value: string; models: string[]; onChange: (m: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [filtering, setFiltering] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
+    addEventListener('pointerdown', onDown);
+    // 展开时把当前选中的那一项滚到可见处
+    listRef.current?.querySelector('.on')?.scrollIntoView({ block: 'nearest' });
+    return () => removeEventListener('pointerdown', onDown);
+  }, [open]);
+
+  const q = value.trim().toLowerCase();
+  const list = filtering && q ? models.filter(m => m.toLowerCase().includes(q)) : models;
+
+  function onKey(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Escape') setOpen(false);
+    else if (e.key === 'ArrowDown' && models.length) { setFiltering(false); setOpen(true); }
+  }
+
+  return (
+    <div className="combo" ref={wrap}>
+      <input
+        value={value}
+        placeholder={models.length ? '直接输入，或从右侧列表选择' : '填好地址和 Key 后可从列表选择'}
+        onChange={e => { onChange(e.target.value); setFiltering(true); setOpen(models.length > 0); }}
+        onKeyDown={onKey}
+        spellCheck={false} autoComplete="off"
+      />
+      <button
+        type="button"
+        className={'icon-btn combo-toggle' + (open ? ' open' : '')}
+        onClick={() => {
+          // 正在按输入筛选时点它：改为显示全部；否则开/关
+          if (open && filtering) setFiltering(false);
+          else { setFiltering(false); setOpen(o => !o); }
+        }}
+        disabled={!models.length}
+        aria-label="展开模型列表"
+        aria-expanded={open}
+      >
+        <IconChevron dir="down" width={18} height={18} />
+      </button>
+      {open && list.length > 0 && (
+        <ul className="combo-list" role="listbox" ref={listRef}>
+          {list.map(m => (
+            <li
+              key={m}
+              role="option"
+              aria-selected={m === value}
+              className={m === value ? 'on' : undefined}
+              onClick={() => { onChange(m); setOpen(false); setFiltering(false); }}
+            >
+              {m}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 
+/** 右上角入口里的三页 */
+export type HubTab = 'history' | 'deck' | 'settings';
+
 export type Route =
   | { name: 'home' }
   | { name: 'draw' }
   | { name: 'daily' }
   | { name: 'reading'; id: string }
   | { name: 'history' }
-  | { name: 'deck' };
+  | { name: 'deck' }
+  | { name: 'settings' };
 
 function parse(hash: string): Route {
   const path = hash.replace(/^#\/?/, '');
@@ -17,6 +21,7 @@ function parse(hash: string): Route {
     case 'r': return arg ? { name: 'reading', id: arg } : { name: 'home' };
     case 'history': return { name: 'history' };
     case 'deck': return { name: 'deck' };
+    case 'settings': return { name: 'settings' };
     default: return { name: 'home' };
   }
 }
